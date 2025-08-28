@@ -5,7 +5,7 @@ export function init(gridElement, autoFocus) {
     if (gridElement === undefined || gridElement === null) {
         return;
     };
-
+    
     enableColumnResizing(gridElement);
 
     let start = gridElement.querySelector('td:first-child');
@@ -169,7 +169,7 @@ export function enableColumnResizing(gridElement, resizeColumnOnAllRows = true) 
         return;
     }
 
-    const isRTL = getComputedStyle(gridElement).direction === 'rtl';
+    const isRTL = false;
     const isGrid = gridElement.classList.contains('grid')
 
     let tableHeight = gridElement.offsetHeight;
@@ -197,7 +197,11 @@ export function enableColumnResizing(gridElement, resizeColumnOnAllRows = true) 
             header,
             size: `${header.clientWidth}px`,
         });
+    });
 
+    removeDocumentListeners();
+    
+    headers.forEach((header) => {
         // remove any previously created divs
         const resizedivs  = header.querySelectorAll(".actual-resize-handle");
         resizedivs.forEach(div => div.remove());
@@ -206,7 +210,7 @@ export function enableColumnResizing(gridElement, resizeColumnOnAllRows = true) 
         const div = createDiv(resizeHandleHeight, isRTL);
         header.appendChild(div);
         setListeners(div, isRTL);
-    });
+    }); 
 
     let initialWidths;
     if (gridElement.style.gridTemplateColumns) {
@@ -246,8 +250,8 @@ export function enableColumnResizing(gridElement, resizeColumnOnAllRows = true) 
         div.addEventListener('pointerup', removeBorder);
         div.addEventListener('pointercancel', removeBorder);
         div.addEventListener('pointerleave', removeBorder);
-
-        document.addEventListener('pointermove', (e) =>
+        
+        $(document).on("pointermove.datagrid-" + gridElement.id, (e) =>
             requestAnimationFrame(() => {
                 gridElement.style.tableLayout = 'fixed';
 
@@ -275,11 +279,22 @@ export function enableColumnResizing(gridElement, resizeColumnOnAllRows = true) 
             })
         );
 
-        document.addEventListener('pointerup', function () {
+        $(document).on("pointerup.datagrid-" + gridElement.id, function (e) {
             curCol = undefined;
             curColWidth = undefined;
             pageX = undefined;
         });
+
+        function onPointerUp() {
+            curCol = undefined;
+            curColWidth = undefined;
+            pageX = undefined;
+        }
+    }
+
+    function removeDocumentListeners() {
+        $(document).off("pointerup.datagrid-" + gridElement.id);
+        $(document).off("pointermove.datagrid-" + gridElement.id);
     }
 
     function createDiv(height, isRTL) {
