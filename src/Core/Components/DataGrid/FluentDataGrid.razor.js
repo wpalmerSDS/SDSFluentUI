@@ -5,7 +5,7 @@ export function init(gridElement, autoFocus) {
     if (gridElement === undefined || gridElement === null) {
         return;
     };
-    
+
     enableColumnResizing(gridElement);
 
     let start = gridElement.querySelector('td:first-child');
@@ -189,7 +189,7 @@ export function enableColumnResizing(gridElement, resizeColumnOnAllRows = true) 
     if (!resizeColumnOnAllRows) {
         // Only use the header height when resizeColumnOnAllRows is false
         // Use the first header's height if available
-        resizeHandleHeight = headers.length > 0 ? (headers[0].offsetHeight - 14 ): 30; // fallback to 30px if no headers
+        resizeHandleHeight = headers.length > 0 ? (headers[0].offsetHeight - 14) : 30; // fallback to 30px if no headers
     }
 
     headers.forEach((header) => {
@@ -200,17 +200,17 @@ export function enableColumnResizing(gridElement, resizeColumnOnAllRows = true) 
     });
 
     removeDocumentListeners();
-    
+
     headers.forEach((header) => {
         // remove any previously created divs
-        const resizedivs  = header.querySelectorAll(".actual-resize-handle");
+        const resizedivs = header.querySelectorAll(".actual-resize-handle");
         resizedivs.forEach(div => div.remove());
 
         // add a new resize div
         const div = createDiv(resizeHandleHeight, isRTL);
         header.appendChild(div);
         setListeners(div, isRTL);
-    }); 
+    });
 
     let initialWidths;
     if (gridElement.style.gridTemplateColumns) {
@@ -250,7 +250,7 @@ export function enableColumnResizing(gridElement, resizeColumnOnAllRows = true) 
         div.addEventListener('pointerup', removeBorder);
         div.addEventListener('pointercancel', removeBorder);
         div.addEventListener('pointerleave', removeBorder);
-        
+
         $(document).on("pointermove.datagrid-" + gridElement.id, (e) =>
             requestAnimationFrame(() => {
                 gridElement.style.tableLayout = 'fixed';
@@ -258,8 +258,13 @@ export function enableColumnResizing(gridElement, resizeColumnOnAllRows = true) 
                 if (curCol) {
                     const diffX = isRTL ? pageX - e.pageX : e.pageX - pageX;
                     const column = columns.find(({ header }) => header === curCol);
+                    let minColumnWidth = parseInt($(column.header).css("min-width"), 10);
 
-                    column.size = parseInt(Math.max(minWidth, curColWidth + diffX), 10) + 'px';
+                    if (isNaN(minColumnWidth)) {
+                        minColumnWidth = minWidth;
+                    }
+
+                    column.size = parseInt(Math.max(minColumnWidth, curColWidth + diffX), 10) + 'px';
 
                     columns.forEach((col) => {
                         if (col.size.startsWith('minmax')) {
