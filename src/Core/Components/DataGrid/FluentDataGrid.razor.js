@@ -161,7 +161,7 @@ export function checkColumnPopupPosition(gridElement, selector) {
     }
 }
 
-export function enableColumnResizing(gridElement, resizeColumnOnAllRows = true) {
+export async function enableColumnResizing(gridElement, resizeColumnOnAllRows = true) {
     const columns = [];
     const headers = gridElement.querySelectorAll('.column-header.resizable');
 
@@ -172,32 +172,23 @@ export function enableColumnResizing(gridElement, resizeColumnOnAllRows = true) 
     const isRTL = false;
     const isGrid = gridElement.classList.contains('grid')
 
-    let tableHeight = gridElement.offsetHeight;
-    // rows have not been loaded yet, so we need to calculate the height
-    if (tableHeight < 70) {
-        // by getting the aria rowcount attribute
-        const rowCount = gridElement.getAttribute('aria-rowcount');
-        if (rowCount) {
-            const rowHeight = gridElement.querySelector('thead tr th').offsetHeight;
-            // and multiply by the itemsize (== height of the header cells)
-            tableHeight = rowCount * rowHeight;
-        }
-    }
-
-    // Determine the height based on the resizeColumnOnAllRows parameter
-    let resizeHandleHeight = tableHeight;
-    if (!resizeColumnOnAllRows) {
-        // Only use the header height when resizeColumnOnAllRows is false
-        // Use the first header's height if available
-        resizeHandleHeight = headers.length > 0 ? (headers[0].offsetHeight - 14) : 30; // fallback to 30px if no headers
-    }
-
-    headers.forEach((header) => {
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const bounds = entry.boundingClientRect;
+        const header = entry.target;
+          
         columns.push({
             header,
-            size: `${header.clientWidth}px`,
+            size: `${bounds.width}px`,
         });
+      }
+    
+      observer.disconnect();
     });
+
+    for (const header of headers) {
+      observer.observe(header);
+    }
 
     removeDocumentListeners();
 
@@ -207,7 +198,7 @@ export function enableColumnResizing(gridElement, resizeColumnOnAllRows = true) 
         resizedivs.forEach(div => div.remove());
 
         // add a new resize div
-        const div = createDiv(resizeHandleHeight, isRTL);
+        const div = createDiv(isRTL);
         header.appendChild(div);
         setListeners(div, isRTL);
     });
@@ -244,7 +235,7 @@ export function enableColumnResizing(gridElement, resizeColumnOnAllRows = true) 
 
         div.addEventListener('pointerover', function (e) {
             e.target.style.borderInlineEnd = 'var(--fluent-data-grid-resize-handle-width) solid var(--fluent-data-grid-resize-handle-color)';
-            e.target.previousElementSibling.style.visibility = 'hidden';
+            e.target.previousElementSibling.style.visibility = 'visible';
         });
 
         div.addEventListener('pointerup', removeBorder);
@@ -302,14 +293,14 @@ export function enableColumnResizing(gridElement, resizeColumnOnAllRows = true) 
         $(document).off("pointermove.datagrid-" + gridElement.id);
     }
 
-    function createDiv(height, isRTL) {
+    function createDiv(isRTL) {
         const div = document.createElement('div');
         div.className = "actual-resize-handle";
-        div.style.top = '5px';
+        div.style.top = '4px';
         div.style.position = 'absolute';
         div.style.cursor = 'col-resize';
         div.style.userSelect = 'none';
-        div.style.height = (height - 5) + 'px';
+        div.style.height = '90%';
         div.style.width = '6px';
         div.style.opacity = 'var(--fluent-data-grid-header-opacity)'
 
@@ -339,7 +330,7 @@ export function enableColumnResizing(gridElement, resizeColumnOnAllRows = true) 
 
     function removeBorder(e) {
         e.target.style.borderInlineEnd = '';
-        e.target.previousElementSibling.style.visibility = 'visible';
+        e.target.previousElementSibling.style.visibility = 'hidden';
     }
 }
 
