@@ -233,15 +233,6 @@ export async function enableColumnResizing(gridElement, resizeColumnOnAllRows = 
             curColWidth = curCol.offsetWidth - padding;
         });
 
-        div.addEventListener('pointerover', function (e) {
-            e.target.style.borderInlineEnd = 'var(--fluent-data-grid-resize-handle-width) solid var(--fluent-data-grid-resize-handle-color)';
-            e.target.previousElementSibling.style.visibility = 'visible';
-        });
-
-        div.addEventListener('pointerup', removeBorder);
-        div.addEventListener('pointercancel', removeBorder);
-        div.addEventListener('pointerleave', removeBorder);
-
         $(document).on("pointermove.datagrid-" + gridElement.id, (e) =>
             requestAnimationFrame(() => {
                 gridElement.style.tableLayout = 'fixed';
@@ -326,11 +317,6 @@ export async function enableColumnResizing(gridElement, resizeColumnOnAllRows = 
 
     function getStyleVal(elm, css) {
         return window.getComputedStyle(elm, null).getPropertyValue(css);
-    }
-
-    function removeBorder(e) {
-        e.target.style.borderInlineEnd = '';
-        e.target.previousElementSibling.style.visibility = 'hidden';
     }
 }
 
